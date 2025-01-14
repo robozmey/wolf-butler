@@ -61,11 +61,26 @@ class RemindersTool():
         if match:
             reminders.add_reminder(match[1])
             return "Reminder created!"
+        
+        match = re.fullmatch(r'/new_reminder_with_time (\d\d:\d\d) (.*)', command)
+        if match:
+            reminder_text = match[2]
+            reminder_time = match[1]
+            reminders.add_reminder(reminder_text, reminder_time)
+            return "Reminder created!"
 
         match = re.fullmatch(r'/get_reminders', command)
         if match:
             if len(reminders) > 0:
                 return "Reminder list: \n" + '\n'.join([f'{i+1}. {r}' for i, r in enumerate(reminders.get_reminders())])
+            else:
+                return "Reminder list: Empty"
+            
+        match = re.fullmatch(r'/get_reminders_by_time (.*)', command)
+        if match:
+            time = match[1]
+            if len(reminders) > 0:
+                return "Reminder list: \n" + '\n'.join([f'{i+1}. {r}' for i, r in enumerate(reminders.get_reminders_by_time(time))])
             else:
                 return "Reminder list: Empty"
 
@@ -123,29 +138,22 @@ class Butler():
 
         return self.text_invoke(messages)
 
-        # if next_action == NextAction.TextResponse.value:
-
-        #     messages += [{"role": "system", "text": "В следующем сообщении отвечай текстом"}]
-        #     return self.text_invoke(messages)
-        
-        # elif next_action == NextAction.ConsoleCommand.value:
-
-        #     messages += [{"role": "system", "text": "В следующем сообщении напиши консольную комманду которую ты запустишь"}]
-        #     return self.text_invoke(messages)
-        # else:
-        #     return messages
-
     
     def text_invoke(self, messages):
         respond = self.text_model.run(messages).alternatives[0].text
-        messages += [{"role": "assistant", "text": respond}]
+
+        m = re.match(r'\{[\s\S]+?\}', respond)
+        if m:
+            respond = m[0]
+            messages += [{"role": "assistant", "text": respond}]
 
         return messages
     
 
     def parse_response(self, response):
         objs = []
-        for match in re.findall(r'\{.*?\}', response["text"]):
+        for match in re.findall(r'\{[\s\S]+\}', response["text"]):
+            print("1", match)
             objs += [json.loads(match)]
 
         return objs

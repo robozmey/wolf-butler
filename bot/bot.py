@@ -8,8 +8,8 @@ import logging
 import sys
 import os
 import time, threading, schedule
-# from dotenv import load_dotenv
-# load_dotenv()
+from dotenv import load_dotenv
+load_dotenv()
 
 import telebot
 from telebot import types
@@ -36,9 +36,9 @@ sdk = YCloudML(
 from butler import TelegramSayTool, RemindersTool, TelegramDebugTool
 from butler import Butler
 
-from promts import butler_promt, butler_message_format, butler_entry_message
+from promts import butler_promt, butler_message_format, reminder_tool_api
 
-butler_desc = butler_promt + butler_message_format
+butler_desc = butler_promt + butler_message_format + reminder_tool_api
 
 tools = [TelegramSayTool(), RemindersTool()]
 
@@ -58,7 +58,20 @@ def setup_butler():
 
 ####
 
+# reminder - { "time": "12:00" or None, "text": str}
+class Reminder():
+    def __init__(self, text, time):
+        self.text = text
+        self.time = time
+
+    def __str__(self):
+        if self.time is None:
+            return self.text
+        else:
+            return f'{self.time} {self.text}'
+
 class ReminderManager():
+
     def __init__(self):
         self.reminders = []
 
@@ -68,14 +81,17 @@ class ReminderManager():
     def __str__(self):
         return str(self.reminders)
 
-    def add_reminder(self, text):
-        self.reminders += [text]
+    def add_reminder(self, text, time=None):
+        self.reminders += [Reminder(text, time)]
 
     def remove_reminder(self, index):
         self.reminders = self.reminders[:index] + self.reminders[index+1:]
 
     def get_reminders(self):
         return self.reminders
+    
+    def get_reminders_by_time(self, time):
+        return list(filter(lambda r: r.time == time, self.reminders))
 
 ####
 
@@ -108,19 +124,27 @@ class ChatContext():
 import datetime
 
 def remind():
-    print("Remindtion time!")
+    now_time = datetime.datetime.now().time().isoformat(timespec='minutes')
+    print("Remindtion time: ", now_time)
     for session_id in sessionMaster.sessions:
         session = sessionMaster.get_session(session_id)
 
         print(session_id, session.reminders)
 
-        if len(session.reminders) > 0:
+        if len(session.reminders.get_reminders_by_time(now_time)) > 0:
 
             context = ChatContext(session, bot)
 
-            now_time = datetime.datetime.now().isoformat()
+            current_reminders = session.reminders.get_reminders_by_time(now_time)
 
-            session.messages = butler.system_send_and_process(session.messages, f"$$REMINDER_EVENT$$, текущее время: {now_time}", context)
+            text = f"Текущее время: {now_time}\nНапоминания на это время:\n"
+
+            for r in current_reminders:
+                text += str(r)
+
+            print(text)
+
+            session.messages = butler.system_send_and_process(session.messages, text, context)
             if session.messages[-1]["role"] == "system":
                 session.messages = butler.invoke_and_process(session.messages, context)
             # session.messages = butler.invoke_and_process(session.messages, context)
@@ -128,8 +152,8 @@ def remind():
             sessionMaster.set_session(session_id, session)
 
 
-# schedule.every(10).seconds.do(remind)
-schedule.every().day.at("20:35").do(remind)
+schedule.every().minute.do(remind)
+# schedule.every().day.at("20:35").do(remind)
     
 ####
 
