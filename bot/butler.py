@@ -35,51 +35,51 @@ class SayTool():
     
 class TelegramSayTool():
     name = "say"
-    def __init__(self, bot, chat_id):
-        self.bot = bot
-        self.chat_id = chat_id
-
     def process(self, obj, context):
         text = obj["text"]
 
-        context[0].send_message(context[1], text)
+        context.bot.send_message(context.chat_id, text)
+
+        return []
+    
+class TelegramDebugTool():
+    name = "debug"
+    def process(self, obj, context):
+        context.bot.send_message(context.chat_id, f'<code>{str(obj)}</code>', parse_mode='HTML')
 
         return []
 
 class RemindersTool():
     name = "reminders"
 
-    def __init__(self):
-        self.reminders_list = []
+    def execute(self, command, context):
 
-    def execute(self, command):
-
-        reminders = self.reminders_list
+        reminders = context.session.reminders
 
         # Command request
         match = re.fullmatch(r'/new_reminder (.*)', command)
         if match:
-            self.reminders_list += [match[1]]
+            reminders.add_reminder(match[1])
             return "Reminder created!"
 
         match = re.fullmatch(r'/get_reminders', command)
         if match:
             if len(reminders) > 0:
-                return "Reminder list: \n" + '\n'.join([f'{i+1}. {r}' for i, r in enumerate(reminders)])
+                return "Reminder list: \n" + '\n'.join([f'{i+1}. {r}' for i, r in enumerate(reminders.get_reminders())])
             else:
                 return "Reminder list: Empty"
 
         match = re.fullmatch(r'/remove_reminder (\d+)', command)
         if match:
             index = int(match[1]) - 1
-            self.reminders_list = reminders[:index] + reminders[index+1:]
+            reminders.remove_reminder(index)
             return "Reminder removed!"
 
         return "Unknown command!"
 
 
     def process(self, obj, context):
-        result = self.execute(obj["command"])
+        result = self.execute(obj["command"], context)
         message = {"role": "system", "text": result}
         return [message]
 
@@ -108,6 +108,10 @@ class Butler():
     
     def user_send(self, messages, user_message):
         new_messages = messages + [{"role": "user", "text": user_message}]
+        return self.invoke(new_messages)
+    
+    def system_send(self, messages, system_message):
+        new_messages = messages + [{"role": "system", "text": system_message}]
         return self.invoke(new_messages)
 
     def invoke(self, messages):
@@ -148,17 +152,36 @@ class Butler():
 
 
     def process_command(self, obj, context):
+        result = []
         for tool in self.tools:
-            if obj["tool"] == tool.name:
-                return tool.process(obj, context)
+            if obj["tool"] == tool.name or tool.name == "debug":
+                result += tool.process(obj, context)
             
-        return []
+        return result
 
 
     def process_commands(self, objs, context=None):
         messages = []
         for obj in objs:
             messages += self.process_command(obj, context)
+
+        return messages
+    
+    def invoke_and_process(self, messages, context):
+        messages = self.invoke(messages)
+        messages += self.process_commands(self.parse_response(messages[-1]), context)
+
+        return messages
+    
+    def user_send_and_process(self, messages, user_message, context):
+        messages = self.user_send(messages, user_message)
+        messages += self.process_commands(self.parse_response(messages[-1]), context)
+
+        return messages
+    
+    def system_send_and_process(self, messages, system_message, context):
+        messages = self.system_send(messages, system_message)
+        messages += self.process_commands(self.parse_response(messages[-1]), context)
 
         return messages
 
