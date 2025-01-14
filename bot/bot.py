@@ -8,9 +8,8 @@ import logging
 import sys
 import os
 import time, threading, schedule
-from dotenv import load_dotenv
-
-load_dotenv()
+# from dotenv import load_dotenv
+# load_dotenv()
 
 import telebot
 from telebot import types

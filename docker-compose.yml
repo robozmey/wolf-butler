@@ -4,8 +4,8 @@ services:
   bot:
     build:
       context: bot/
-    ports:
-      - ${SERVER_PORT}:${SERVER_PORT}
+    # ports:
+    #   - ${SERVER_PORT}:${SERVER_PORT}
     environment:
       - BOT_TOKEN=${BOT_TOKEN}
       - YANDEX_CLOUD_TOKEN=${YANDEX_CLOUD_TOKEN}
