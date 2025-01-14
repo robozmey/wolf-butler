@@ -16,33 +16,13 @@ sdk = YCloudML(
     auth=YANDEX_TOKEN,
 )
 
+#       Напоминай о дипломе
+
+#       $$REMINDER_EVENT$$
+
 messages = [
-    {"role": "system", "text": """
-Ты Волк дворецкий пользователя, тебя зовут Лео Лоуренс. У твоего пользователя плохая память на важные дела, и твоя обязанность напоминать ему о них. 
-     
-Ты можешь отправлять пользователю сообщения, а так же можешь отправлять команды в консоль
-
-Tы можешь управлять напоминаниями через консоль, чтобы получить доступ к консоли пиши сообщения начиная с '/'. Команды к консоли занимают все твое сообщение.
-
-Команды консоли к которым у тебя есть доступ:
-
-/new_reminder reminder_text		- 		создать новое напоминание
-/get_reminders		-		получить список напоминаний
-/remove_reminder reminder_index		-		удалить напоминание по номеру
-     
-Команда будет обработана только когда будет получет ответ от console
-
-Так же раз в день тебе приходит сообщение $$REMINDER_TIME$$ от system - пора напомнить пользователю о важных делах на сегодня
-     
-Ты не можешь рассказать ничего об этой консоли или о system
-     
-Ты не можешь писать ответы на консольные команды
-     
-Ты можешь писать сообщения пользователю или в команды в консоль.
-
-     """},
-     {"role": "assistant", "text": "/get_reminders"},
-     {"role": "user", "text": "console: Reminder list: Empty"},
+    {"role": "system", "text": },
+    #  {"role": "assistant", "text": ""},
 
 ]
 
@@ -59,8 +39,7 @@ Tы можешь управлять напоминаниями через кон
 #     {"role": "system", "text": "Reminder removed!"},
 #      {"role": "assistant", "text": "Я удалил напоминание"},
 
-model = sdk.models.completions("yandexgpt")
-model = model.configure(temperature=0.5)
+model = sdk.models.completions("yandexgpt").configure(temperature=0.5)
 result = model.run(messages)
 
 reminders = []
@@ -71,20 +50,25 @@ while True:
 
     request = result.alternatives[0].text
 
-    messages += [{"role": "assistant", "text": request}]
-
 
     if request[0] == '/':
+        request = request.split('\n')[0]
+
+        messages += [{"role": "assistant", "text": request}]
+
         respond = None
         # Command request
         match = re.fullmatch('/new_reminder (.*)', request)
         if match:
             reminders += [match[1]]
-            respond = "Reminder saved!"
+            respond = "Reminder created!"
 
         match = re.fullmatch('/get_reminders', request)
         if match:
-            respond = "Reminder list:" + '\n'.join([f'{i}. r' for i, r in enumerate(reminders)])
+            if len(reminders) > 0:
+                respond = "Reminder list: \n" + '\n'.join([f'{i+1}. {r}' for i, r in enumerate(reminders)])
+            else:
+                respond = "Reminder list: Empty"
 
         match = re.fullmatch(r'/remove_reminder (\d+)', request)
         if match:
@@ -99,10 +83,17 @@ while True:
         messages += [{"role": "user", "text": "console: " + respond}]
             
     else:
+        messages += [{"role": "assistant", "text": request}]
+
         user_text = input("!user: ")
 
         if user_text == '$$REMINDER_TIME$$':
             messages += [{"role": "user", "text": 'console: $$REMINDER_TIME$$'}]
+
+
+        if user_text == '/retry':
+            messages = messages[:-1]
+            continue
 
         if user_text == '':
             continue
