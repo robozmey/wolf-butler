@@ -1,0 +1,30 @@
+version: '3.7'
+
+services:
+  bot:
+    build:
+      context: bot/
+    ports:
+      - ${SERVER_PORT}:${SERVER_PORT}
+    environment:
+      - BOT_TOKEN=${BOT_TOKEN}
+      - YANDEX_CLOUD_TOKEN=${YANDEX_CLOUD_TOKEN}
+      - YANDEX_CLOUD_FOLDER=${YANDEX_CLOUD_FOLDER}
+
+  # db:
+  #   image: postgres:16.1
+  #   restart: always
+  #   environment:
+  #     - POSTGRES_USER=${DB_ROOT_USER:-${DB_USER}}
+  #     - POSTGRES_PASSWORD=${DB_ROOT_USER_PASSWORD:-${DB_PASSWORD}}
+  #   volumes:
+  #     - db-data:/var/lib/postgresql/data
+  #   ports:
+  #     - ${DB_PORT}:5432
+  #   networks:
+  #     - roomkn
+  #   profiles:
+  #     - db
+      
+volumes:
+  db-data: {}
