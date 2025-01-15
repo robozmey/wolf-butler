@@ -11,20 +11,16 @@ services:
       - YANDEX_CLOUD_TOKEN=${YANDEX_CLOUD_TOKEN}
       - YANDEX_CLOUD_FOLDER=${YANDEX_CLOUD_FOLDER}
 
-  # db:
-  #   image: postgres:16.1
-  #   restart: always
-  #   environment:
-  #     - POSTGRES_USER=${DB_ROOT_USER:-${DB_USER}}
-  #     - POSTGRES_PASSWORD=${DB_ROOT_USER_PASSWORD:-${DB_PASSWORD}}
-  #   volumes:
-  #     - db-data:/var/lib/postgresql/data
-  #   ports:
-  #     - ${DB_PORT}:5432
-  #   networks:
-  #     - roomkn
-  #   profiles:
-  #     - db
+  db:
+    image: postgres:16.1
+    restart: always
+    environment:
+      - POSTGRES_USER=${DB_ROOT_USER}
+      - POSTGRES_PASSWORD=${DB_ROOT_USER_PASSWORD}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - ${DB_PORT}:5432
       
 volumes:
   db-data: {}

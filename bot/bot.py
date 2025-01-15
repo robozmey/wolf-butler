@@ -8,8 +8,8 @@ import logging
 import sys
 import os
 import time, threading, schedule
-from dotenv import load_dotenv
-load_dotenv()
+# from dotenv import load_dotenv
+# load_dotenv()
 
 import telebot
 from telebot import types
@@ -52,7 +52,9 @@ def setup_butler():
 
     butler_desc = butler_promt + butler_message_format
 
-    tools = [TelegramSayTool(), RemindersTool(), TelegramDebugTool()]
+    tools = [TelegramSayTool(), RemindersTool()]
+
+    # tools += [TelegramDebugTool()]
 
     butler = Butler(sdk, butler_desc, tools)
 
@@ -95,23 +97,23 @@ class ReminderManager():
 
 ####
 
-class Session():
-    def __init__(self, chat_id):
-        self.chat_id = chat_id
-        self.messages = DEFAULT_MESSAGES
-        self.reminders = ReminderManager()
+from storage import Storage, Session
+
+storage = Storage()
+
+####
 
 class SessionMaster():
-    def __init__(self):
-        self.sessions = {}
+    def __init__(self, storage):
+        self.storage = storage
 
     def get_session(self, id):
-        return self.sessions.get(id, Session(id))
+        return self.storage.sessions.get(id)
     
     def set_session(self, id, session):
-        self.sessions[id] = session
+        self.storage.sessions.set(id, session)
 
-sessionMaster = SessionMaster()
+sessionMaster = SessionMaster(storage)
 
 class ChatContext():
     def __init__(self, session, bot):
@@ -125,7 +127,7 @@ import datetime
 
 def remind():
     now_time = datetime.datetime.now().time().isoformat(timespec='minutes')
-    print("Remindtion time: ", now_time)
+    logging.info(f"Remind time: {now_time}")
     for session_id in sessionMaster.sessions:
         session = sessionMaster.get_session(session_id)
 
@@ -137,12 +139,10 @@ def remind():
 
             current_reminders = session.reminders.get_reminders_by_time(now_time)
 
-            text = f"Текущее время: {now_time}\nНапоминания на это время:\n"
+            text = f"Текущее время: {now_time}\nНапомни пользователю о:\n"
 
             for r in current_reminders:
                 text += str(r)
-
-            print(text)
 
             session.messages = butler.system_send_and_process(session.messages, text, context)
             if session.messages[-1]["role"] == "system":
@@ -152,13 +152,30 @@ def remind():
             sessionMaster.set_session(session_id, session)
 
 
-schedule.every().minute.do(remind)
+schedule.every(10).seconds.do(remind)
 # schedule.every().day.at("20:35").do(remind)
     
 ####
 
-@bot.message_handler(commands=['start', 'reset'])
+@bot.message_handler(commands=['start'])
 def send_welcome(message):
+
+    chat_id = message.chat.id
+    session = Session(chat_id)
+
+    bot.send_chat_action(chat_id, "typing")
+
+    setup_butler()
+
+    context = ChatContext(session, bot)
+
+    session.messages = butler.invoke_and_process(session.messages, context)
+
+    sessionMaster.set_session(chat_id, session)
+
+
+@bot.message_handler(commands=['reset'])
+def send_reset(message):
 
     chat_id = message.chat.id
     session = Session(chat_id)
@@ -211,6 +228,9 @@ def echo_message(message):
 if __name__ == '__main__':
     threading.Thread(target=bot.infinity_polling, name='bot_infinity_polling', daemon=True).start()
     setup_butler()
+
+    logging.basicConfig(level=logging.INFO)
+    logging.info("Bot Started")
 
     while True:
         schedule.run_pending()
