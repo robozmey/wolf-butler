@@ -1,4 +1,6 @@
-#!/usr/bin/python
+#!/usr/bin/python3
+
+from __future__ import annotations
 
 # This is a simple echo bot using the decorator mechanism.
 # It echoes any incoming text messages.
@@ -8,8 +10,8 @@ import logging
 import sys
 import os
 import time, threading, schedule
-# from dotenv import load_dotenv
-# load_dotenv()
+from dotenv import load_dotenv
+load_dotenv()
 
 import telebot
 from telebot import types
@@ -33,18 +35,15 @@ sdk = YCloudML(
 
 #####
 
-from butler import TelegramSayTool, RemindersTool, TelegramDebugTool
+from tools.butler_tools import TelegramSayTool, TelegramDebugTool
+from tools.reminder_tools import RemindersTool
 from butler import Butler
 
-from promts import butler_promt, butler_message_format, reminder_tool_api
-
-butler_desc = butler_promt + butler_message_format + reminder_tool_api
+from promts import butler_promt, butler_message_format, butler_desc
 
 tools = [TelegramSayTool(), RemindersTool()]
 
 butler = Butler(sdk, butler_desc, tools)
-
-DEFAULT_MESSAGES = [{"role": "system", "text": butler_desc}, {"role": "system", "text": "Поприветствуй пользователя"}]
 
 def setup_butler():
     global butler
@@ -58,86 +57,29 @@ def setup_butler():
 
     butler = Butler(sdk, butler_desc, tools)
 
-####
-
-# reminder - { "time": "12:00" or None, "text": str}
-class Reminder():
-    def __init__(self, text, time):
-        self.text = text
-        self.time = time
-
-    def __str__(self):
-        if self.time is None:
-            return self.text
-        else:
-            return f'{self.time} {self.text}'
-
-class ReminderManager():
-
-    def __init__(self):
-        self.reminders = []
-
-    def __len__(self):
-        return len(self.reminders)
-    
-    def __str__(self):
-        return str(self.reminders)
-
-    def add_reminder(self, text, time=None):
-        self.reminders += [Reminder(text, time)]
-
-    def remove_reminder(self, index):
-        self.reminders = self.reminders[:index] + self.reminders[index+1:]
-
-    def get_reminders(self):
-        return self.reminders
-    
-    def get_reminders_by_time(self, time):
-        return list(filter(lambda r: r.time == time, self.reminders))
-
-####
-
-from storage import Storage, Session
+from storage import Storage
 
 storage = Storage()
 
-####
-
-class SessionMaster():
-    def __init__(self, storage):
-        self.storage = storage
-
-    def get_session(self, id):
-        return self.storage.sessions.get(id)
-    
-    def set_session(self, id, session):
-        self.storage.sessions.set(id, session)
+from session import Session
+from context import SessionMaster, ChatContext
 
 sessionMaster = SessionMaster(storage)
-
-class ChatContext():
-    def __init__(self, session, bot):
-        self.session = session
-        self.chat_id = session.chat_id
-        self.bot = bot
-
-####
 
 import datetime
 
 def remind():
     now_time = datetime.datetime.now().time().isoformat(timespec='minutes')
     logging.info(f"Remind time: {now_time}")
-    for session_id in sessionMaster.sessions:
+    
+    for session_id in sessionMaster.list():
         session = sessionMaster.get_session(session_id)
 
-        print(session_id, session.reminders)
+        current_reminders = storage.reminders.get_by_interval(session_id, now_time, now_time)
 
-        if len(session.reminders.get_reminders_by_time(now_time)) > 0:
+        if len(current_reminders) > 0:
 
-            context = ChatContext(session, bot)
-
-            current_reminders = session.reminders.get_reminders_by_time(now_time)
+            context = ChatContext(session, bot, storage)
 
             text = f"Текущее время: {now_time}\nНапомни пользователю о:\n"
 
@@ -157,38 +99,23 @@ schedule.every(10).seconds.do(remind)
     
 ####
 
-@bot.message_handler(commands=['start'])
+@bot.message_handler(commands=['start', 'reset'])
 def send_welcome(message):
 
     chat_id = message.chat.id
-    session = Session(chat_id)
+    session = sessionMaster.reset_session(chat_id)
 
     bot.send_chat_action(chat_id, "typing")
 
     setup_butler()
 
-    context = ChatContext(session, bot)
+    context = ChatContext(session, bot, storage)
 
     session.messages = butler.invoke_and_process(session.messages, context)
 
     sessionMaster.set_session(chat_id, session)
 
 
-@bot.message_handler(commands=['reset'])
-def send_reset(message):
-
-    chat_id = message.chat.id
-    session = Session(chat_id)
-
-    bot.send_chat_action(chat_id, "typing")
-
-    setup_butler()
-
-    context = ChatContext(session, bot)
-
-    session.messages = butler.invoke_and_process(session.messages, context)
-
-    sessionMaster.set_session(chat_id, session)
 
 
 @bot.message_handler(commands=['history'])
@@ -208,14 +135,14 @@ def send_history(message):
 
 # Handle all other messages with content_type 'text' (content_types defaults to ['text'])
 @bot.message_handler(func=lambda message: True)
-def echo_message(message):
+def text_message(message):
 
     chat_id = message.chat.id
     session = sessionMaster.get_session(chat_id)
 
     bot.send_chat_action(message.chat.id, "typing")
 
-    context = ChatContext(session, bot)
+    context = ChatContext(session, bot, storage)
     session.messages = butler.user_send_and_process(session.messages, message.text, context)
 
     if session.messages[-1]["role"] == "system":

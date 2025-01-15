@@ -63,3 +63,6 @@ butler_system_messages = """
 butler_entry_message = """
 {"tool": "say", "text": "Здравствуйте, господин! Чем могу быть полезен?"}
 """
+
+butler_desc = butler_promt + butler_message_format + reminder_tool_api
+DEFAULT_MESSAGES = [{"role": "system", "text": butler_desc}, {"role": "system", "text": "Поприветствуй пользователя"}]

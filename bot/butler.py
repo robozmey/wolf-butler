@@ -55,7 +55,7 @@ class Butler():
         return self.invoke(new_messages)
 
     def invoke(self, messages):
-        probs = self.how_to_react(messages)
+        # probs = self.how_to_react(messages)
 
         # reaction_variant = probs.index(max(probs))
 
