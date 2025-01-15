@@ -77,9 +77,14 @@ class Butler():
 
     def parse_response(self, response):
         objs = []
-        for match in re.findall(r'\{[\s\S]+\}', response["text"]):
-            print("1", match)
-            objs += [json.loads(match)]
+        for m in re.findall(r'\{[\s\S]+\}', response["text"]):
+            print("1", m)
+            try:
+                objs += [json.loads(m)]
+            except Exception:
+                m2 = re.match(r'\{{"tool": "say", "text": "([\s\S]*?)"\}}', m)
+                if m2:
+                    objs += [{"tool": "say", "text": m2[1]}]
 
         return objs
 

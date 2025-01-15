@@ -31,7 +31,7 @@ class RemindersTool():
         if match:
             r_list = storage.reminders.get(chat_id)
             if len(r_list) > 0:
-                return "Reminder list: \n" + '\n'.join([f'{i+1}. {r}' for i, r in enumerate(r_list)])
+                return "Reminder list: \n" + '\n'.join([str(r) for r in r_list])
             else:
                 return "Reminder list: Empty"
             
@@ -46,9 +46,14 @@ class RemindersTool():
 
         match = re.fullmatch(r'/remove_reminder (\d+)', command)
         if match:
-            index = int(match[1]) - 1
+            index = int(match[1])
             storage.reminders.remove(chat_id, index)
             return "Reminder removed!"
+        
+        match = re.fullmatch(r'/remove_all_reminders', command)
+        if match:
+            storage.reminders.remove_all(chat_id)
+            return "All reminders removed!"
 
         return "Unknown command!"
 
