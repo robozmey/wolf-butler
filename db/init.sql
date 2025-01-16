@@ -4,8 +4,9 @@
 CREATE DATABASE wolf_butler_database;
 
 CREATE TABLE sessions (
-    chat_id SERIAL PRIMARY KEY,
-    message_list TEXT
+    session_id SERIAL PRIMARY KEY,
+    chat_id SERIAL UNIQUE,
+    message_list XML
 );
 
 CREATE TABLE reminders (
