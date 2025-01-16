@@ -8,7 +8,7 @@ class BaseTool():
 class SayTool(BaseTool):
     name = "say"
     def process(self, obj):
-        print(obj["text"])
+        # print(obj["text"])
         return []
     
 class TelegramSayTool(BaseTool):

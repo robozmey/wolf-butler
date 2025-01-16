@@ -2,7 +2,7 @@ from typing import List
 
 import psycopg2
 
-from session import Session
+from session import Session, export_messages, import_messages
 from tools.reminder_tools_general import Reminder
 from butler import Butler
 
@@ -26,24 +26,52 @@ class Storage():
 
         def __init__(self, storage, butler: Butler):
             self.storage = storage
-            self.sessions = {}
             self.butler = butler
 
         def list(self) -> List[int]:
-            return list(self.sessions.keys())
+            records = self.storage.db_execute(
+                "SELECT chat_id FROM sessions", 
+            )
+            return [r[0] for r in records]
 
         def get(self, chat_id: int) -> Session:
-            if chat_id not in self.sessions:
-                self.sessions[chat_id] = self.butler.new_session(chat_id)
 
-            return self.sessions[chat_id]
+            records = self.storage.db_execute(
+                "SELECT message_list FROM sessions WHERE chat_id = %s", 
+                [chat_id]
+            )
+            
+            sessions = Session(chat_id, import_messages(records[0][0]))
 
-        def set(self, chat_id: int, session: Session) -> None:
-            self.sessions[chat_id] = session
+            return sessions
+
+        def set(self, chat_id: int, session: Session) -> Session:
+
+            message_list = export_messages(session.messages)
+
+            # print('message_list:', message_list, ':message_list')
+
+            self.storage.db_execute(
+                "UPDATE sessions SET message_list = XMLPARSE(DOCUMENT %s) WHERE chat_id = %s", 
+                [message_list, chat_id]
+            )
+
+            return session
+
+        def new(self, chat_id: int) -> bool:
+
+            self.storage.db_execute(
+                "INSERT INTO sessions (chat_id) VALUES(%s)", 
+                [chat_id]
+            )
+            
+            return True
 
         def reset(self, chat_id: int) -> Session:
-            self.sessions[chat_id] = self.butler.new_session(chat_id)
-            return self.sessions[chat_id]
+
+            self.new(chat_id)
+
+            return self.set(chat_id, self.butler.new_session(chat_id))
 
     class Reminders():
 
@@ -96,14 +124,21 @@ class Storage():
         self.connection.commit()
 
     def db_execute(self, query: str, data_tuple = None):
-        cursor = self.connection.cursor()
-        cursor.execute(query, data_tuple)
-        self.db_commit()
-        records = []
-        if cursor.pgresult_ptr is not None:
-            records = cursor.fetchall()
-        self.db_commit()
-        cursor.close()
+
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(query, data_tuple)
+            self.db_commit()
+            records = []
+            if cursor.pgresult_ptr is not None:
+                records = cursor.fetchall()
+            self.db_commit()
+            cursor.close()
+        except Exception as e:
+            print('DB Exception:', e, ':DB Exception')
+            self.db_commit()
+            return None
+                
         return records
 
     def __init__(self, butler: Butler, settings: StorageSettings):

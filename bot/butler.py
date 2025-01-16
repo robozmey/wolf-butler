@@ -41,8 +41,6 @@ class Butler():
         for tool in tools:
             apis_desc += tool.api_desc + "\n"
 
-        print(tools, apis_desc)
-
         if apis_desc != "":
             self.butler_desc += "# Описания доступных тебе инструментов (API):\n" + apis_desc
 
@@ -98,7 +96,7 @@ class Butler():
     def parse_response(self, response):
         objs = []
         for m in re.findall(r'\{[\s\S]+\}', response["text"]):
-            print("1", m)
+            # print("1", m)
             try:
                 objs += [json.loads(m)]
             except Exception:
@@ -142,42 +140,3 @@ class Butler():
         messages += self.process_commands(self.parse_response(messages[-1]), context)
 
         return messages
-
-
-
-
-
-def main() -> None:
-    sdk = YCloudML(
-        folder_id=YANDEX_FOLDER,
-        auth=YANDEX_TOKEN,
-    )
-    
-    butler_desc = butler_promt + butler_message_format
-
-    tools = [SayTool(), RemindersTool()]
-
-    butler = Butler(sdk, butler_desc, tools)
-
-    messages = [{"role": "system", "text": butler_desc}]
-
-    messages = butler.invoke(messages)
-
-    messages = butler.user_send(messages, "Напомни про диплом")
-
-    messages += butler.process_commands(butler.parse_response(messages[-1]))
-
-    messages = butler.user_send(messages, "Какие есть напоминания?")
-
-    messages += butler.process_commands(butler.parse_response(messages[-1]))
-
-    messages = butler.invoke(messages)
-
-    # print(messages[-1])
-
-    for message in messages[1:]:
-        print(f'{message["role"]}:')
-        print(message["text"])
-
-if __name__ == '__main__':
-    main()
