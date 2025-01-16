@@ -94,7 +94,7 @@ class RemindersTool(BaseTool):
             storage.reminders.remove_all(chat_id)
             return "All reminders removed!"
 
-        return "Unknown command!"
+        return "Error: Unknown command!"
 
 
     def process(self, obj, context: ChatContext):
