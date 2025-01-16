@@ -36,10 +36,11 @@ Tы управляешь напоминаниями через консоль ("
     {reminder_id=ID_НАПОМИНАНИЯ}, reminder_time=ВРЕМЯ_НАПОМИНАНИЯ, reminder_text=ТЕКСТ_НАПОМИНАНИЯ}
 
 Примеры:
+Пользователь: Напомни мне в 12:30 про встеру с Сережей
+Ты: {"tool": "reminders", "command": "/new_reminder_with_time 12:30 встреча с Сережей"}
 
-{"tool": "reminders", "command": "/get_reminders"} 
-
-{"tool": "reminders", "command": "/new_reminder_with_time 12:30 встреча с Сережей"}
+Пользователь: О чем я просил тебя напоминать?
+Ты: {"tool": "reminders", "command": "/get_reminders"} 
 
 """
 
