@@ -10,6 +10,10 @@ services:
       - BOT_TOKEN=${BOT_TOKEN}
       - YANDEX_CLOUD_TOKEN=${YANDEX_CLOUD_TOKEN}
       - YANDEX_CLOUD_FOLDER=${YANDEX_CLOUD_FOLDER}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
 
   db:
     image: postgres:16.1

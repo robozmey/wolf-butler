@@ -69,33 +69,45 @@ sessionMaster = SessionMaster(storage)
 
 import datetime
 
-def remind():
-    now_time = datetime.datetime.now().time().isoformat(timespec='minutes')
-    logging.info(f"Remind time: {now_time}")
-    
-    for session_id in sessionMaster.list():
-        session = sessionMaster.get_session(session_id)
-
-        current_reminders = storage.reminders.get_by_interval(session_id, now_time, now_time)
-
-        if len(current_reminders) > 0:
-
-            context = ChatContext(session, bot, storage)
-
-            text = f"Текущее время: {now_time}\nНапомни пользователю о:\n"
-
-            for r in current_reminders:
-                text += str(r)
-
-            session.messages = butler.system_send_and_process(session.messages, text, context)
-            if session.messages[-1]["role"] == "system":
-                session.messages = butler.invoke_and_process(session.messages, context)
-            # session.messages = butler.invoke_and_process(session.messages, context)
-
-            sessionMaster.set_session(session_id, session)
 
 
-schedule.every(10).seconds.do(remind)
+
+class Scheduler():
+    def __init__(self):
+        self.previous_remind_time = datetime.datetime.now().time().isoformat(timespec='minutes')
+
+    def remind(self):
+        prev_time = self.previous_remind_time
+        now_time = datetime.datetime.now().time().isoformat(timespec='minutes')
+        logging.info(f"Remind time: {now_time}")
+        
+        for session_id in sessionMaster.list():
+            session = sessionMaster.get_session(session_id)
+
+            current_reminders = storage.reminders.get_by_interval(session_id, prev_time, now_time)
+
+            if len(current_reminders) > 0:
+
+                context = ChatContext(session, bot, storage)
+
+                text = f"Текущее время: {now_time}\nНапомни пользователю о:\n"
+
+                for r in current_reminders:
+                    text += str(r)
+
+                session.messages = butler.system_send_and_process(session.messages, text, context)
+                if session.messages[-1]["role"] == "system":
+                    session.messages = butler.invoke_and_process(session.messages, context)
+                # session.messages = butler.invoke_and_process(session.messages, context)
+
+                sessionMaster.set_session(session_id, session)
+
+        self.previous_remind_time = now_time
+
+
+scheduler = Scheduler()
+
+schedule.every(2).minutes.do(scheduler.remind)
 # schedule.every().day.at("20:35").do(remind)
     
 ####

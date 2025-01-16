@@ -117,7 +117,18 @@ class Storage():
             )
         
         def get_by_interval(self, chat_id: int, time_start: str, time_end: str) -> List[Reminder]:
-            return list(filter(lambda r: time_start <= r.time and r.time <= time_end, self.get(chat_id)))
+            all_reminders = self.get(chat_id)
+            if time_start <= time_end:
+                return list(filter(
+                    lambda r: (time_start < r.time or time_start < r.time and time_start == time_end) and r.time <= time_end, 
+                    all_reminders
+                ))
+            else:
+                return list(filter(
+                    lambda r: time_end <= r.time or r.time <= time_start, 
+                    all_reminders
+                ))
+            
     
 
     def db_commit(self):

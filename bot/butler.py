@@ -57,7 +57,7 @@ class Butler():
 
 
     def new_session(self, chat_id: int) -> Session:
-        messages = [{"role": "system", "text": self.butler_desc}, {"role": "system", "text": "Поприветствуй пользователя"}]
+        messages = [{"role": "system", "text": self.butler_desc}, {"role": "system", "text": "Поприветствуй пользователя, представьсься и расскажи о том, что ты можешь"}]
         return Session(chat_id, messages)
 
 
