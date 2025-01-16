@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import List
 
+import logging
+
 from yandex_cloud_ml_sdk import YCloudML
 
 import os
@@ -103,6 +105,8 @@ class Butler():
                 m2 = re.match(r'\{\s*"tool"\s*:\s*"say"\s*,\s*"text"\s*:\s*"([\s\S]*?)"\s*\}', m)
                 if m2:
                     objs += [{"tool": "say", "text": m2[1]}]
+                else:
+                    logging.warning(f'Cannot parse GPT response: {m}')
 
         return objs
 

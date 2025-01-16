@@ -1,6 +1,7 @@
 from typing import List
 
 import psycopg2
+import logging
 
 from session import Session, export_messages, import_messages
 from tools.reminder_tools_general import Reminder
@@ -49,7 +50,7 @@ class Storage():
 
             message_list = export_messages(session.messages)
 
-            # print('message_list:', message_list, ':message_list')
+            # logging.debug(f'message_list: {message_list}')
 
             self.storage.db_execute(
                 "UPDATE sessions SET message_list = XMLPARSE(DOCUMENT %s) WHERE chat_id = %s", 
@@ -146,7 +147,7 @@ class Storage():
             self.db_commit()
             cursor.close()
         except Exception as e:
-            print('DB Exception:', e, ':DB Exception')
+            logging.warning(f'Caught exception executing sql: {e}')
             self.db_commit()
             return None
                 
