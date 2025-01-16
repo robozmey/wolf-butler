@@ -102,7 +102,7 @@ class Butler():
             try:
                 objs += [json.loads(m)]
             except Exception:
-                m2 = re.match(r'\{{"tool": "say", "text": "([\s\S]*?)"\}}', m)
+                m2 = re.match(r'\{\s*"tool"\s*:\s*"say"\s*,\s*"text"\s*:\s*"([\s\S]*?)"\s*\}', m)
                 if m2:
                     objs += [{"tool": "say", "text": m2[1]}]
 

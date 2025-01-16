@@ -19,8 +19,13 @@ from telebot import types
 
 # Bot token can be obtained via https://t.me/BotFather
 BOT_TOKEN = os.getenv('BOT_TOKEN')
-YANDEX_FOLDER= os.getenv('YANDEX_CLOUD_FOLDER')
+YANDEX_FOLDER = os.getenv('YANDEX_CLOUD_FOLDER')
 YANDEX_TOKEN = os.getenv('YANDEX_CLOUD_TOKEN')
+
+DB_USER = os.getenv('DB_USER')
+DB_PASSWORD = os.getenv('DB_PASSWORD')
+DB_HOST = os.getenv('DB_HOST')
+DB_PORT = os.getenv('DB_PORT')
 
 bot = telebot.TeleBot(BOT_TOKEN)
 
@@ -52,9 +57,10 @@ def setup_butler():
 
 setup_butler()
 
-from storage import Storage
+from storage import Storage, StorageSettings
 
-storage = Storage(butler)
+storage_settings = StorageSettings(DB_HOST, DB_PORT, DB_USER, DB_PASSWORD)
+storage = Storage(butler, storage_settings)
 
 from session import Session
 from context import SessionMaster, ChatContext

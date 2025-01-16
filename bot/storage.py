@@ -6,6 +6,20 @@ from session import Session
 from tools.reminder_tools_general import Reminder
 from butler import Butler
 
+class StorageSettings():
+    dbname='wolf_butler_database'
+    user='admin', 
+    password='WeRy_HaRt_paroll'
+
+    host='89.169.164.126'
+    port='6000'
+
+    def __init__(self, host, port, user, password):
+        self.host = host
+        self.port = port
+        self.user = user
+        self.password = password
+
 class Storage():
 
     class Sessions():
@@ -92,10 +106,13 @@ class Storage():
         cursor.close()
         return records
 
-    def __init__(self, butler: Butler):
+    def __init__(self, butler: Butler, settings: StorageSettings):
         self.connection = psycopg2.connect(
-            dbname='wolf_butler_database', user='admin', 
-            password='WeRy_HaRt_paroll', host='89.169.164.126', port='6000'
+            dbname=settings.dbname, 
+            user=settings.user, 
+            password=settings.password, 
+            host=settings.host, 
+            port=settings.port
         )
         self.butler = butler
         self.reminders = self.Reminders(self)
