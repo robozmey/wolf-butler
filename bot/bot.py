@@ -141,6 +141,9 @@ def send_history(message):
         out += msg["role"] + ':\n'
         out += msg["text"] + '\n'
 
+    if len(out) > 1000:
+        out = out[-1000:]
+
     bot.send_message(chat_id, out)
 
 
