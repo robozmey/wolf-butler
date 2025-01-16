@@ -37,29 +37,24 @@ sdk = YCloudML(
 
 from tools.butler_tools import TelegramSayTool, TelegramDebugTool
 from tools.reminder_tools import RemindersTool
+from tools.time_tool import TimeTool
 from butler import Butler
 
 from promts import butler_promt, butler_message_format, butler_desc
 
-tools = [TelegramSayTool(), RemindersTool()]
+tools = [TelegramSayTool(), RemindersTool(), TimeTool()]
 
 butler = Butler(sdk, butler_desc, tools)
 
 def setup_butler():
     global butler
-    global messages
-
-    butler_desc = butler_promt + butler_message_format
-
-    tools = [TelegramSayTool(), RemindersTool()]
-
-    # tools += [TelegramDebugTool()]
-
     butler = Butler(sdk, butler_desc, tools)
+
+setup_butler()
 
 from storage import Storage
 
-storage = Storage()
+storage = Storage(butler)
 
 from session import Session
 from context import SessionMaster, ChatContext
@@ -106,8 +101,6 @@ def send_welcome(message):
     session = sessionMaster.reset_session(chat_id)
 
     bot.send_chat_action(chat_id, "typing")
-
-    setup_butler()
 
     context = ChatContext(session, bot, storage)
 

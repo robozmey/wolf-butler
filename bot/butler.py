@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import List
+
 from yandex_cloud_ml_sdk import YCloudML
 
 import os
@@ -16,6 +18,8 @@ import re
 import json
 
 from promts import butler_promt, butler_message_format
+from tools.butler_tools import BaseTool
+from session import Session
 
 from enum import Enum
 class NextAction(Enum):
@@ -26,9 +30,22 @@ class NextAction(Enum):
 
 class Butler():
 
-    def __init__(self, sdk, butler_desc, tools):
+    def __init__(self, sdk, butler_desc, tools: List[BaseTool]):
         # self.sdk = sdk
         self.butler_desc = butler_desc
+
+        self.tools = tools
+
+        apis_desc = ""
+
+        for tool in tools:
+            apis_desc += tool.api_desc + "\n"
+
+        print(tools, apis_desc)
+
+        if apis_desc != "":
+            self.butler_desc += "# Описания доступных тебе инструментов (API):\n" + apis_desc
+
         self.choose_model = sdk.models.text_classifiers("yandexgpt").configure(
             task_description= f'Ты раотаешь по следующим правилам {butler_desc}\n' + "Как отреагировать на это сообщение?",
             labels=[
@@ -40,7 +57,10 @@ class Butler():
 
         self.text_model = sdk.models.completions("yandexgpt").configure(temperature=0.5)
 
-        self.tools = tools
+
+    def new_session(self, chat_id: int) -> Session:
+        messages = [{"role": "system", "text": self.butler_desc}, {"role": "system", "text": "Поприветствуй пользователя"}]
+        return Session(chat_id, messages)
 
 
     def how_to_react(self, messages):

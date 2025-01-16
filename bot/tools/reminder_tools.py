@@ -4,10 +4,49 @@ from storage import Storage
 from session import Session
 from context import ChatContext
 
+from tools.butler_tools import BaseTool
+
 from tools.reminder_tools_general import Reminder
 
-class RemindersTool():
+reminder_tool_api = """
+# Reminders API 
+
+Tы управляешь напоминаниями через консоль ("tool":"reminders"), чтобы получить доступ к консоли пиши сообщения начиная с '/' по одной команде на новой строке. Команды к консоли занимают все твое сообщение.
+     
+После вызова команды нужно подождать. Команда будет обработана только когда будет получет ответ от console: "Reminder created!" или "Reminder removed!"
+     
+Напомнинание не счистается созданым если не была вызвана команда
+
+Напоминания удаляются только по запросу пользователя
+     
+Каждый раз когда пользователь просит посмотреть, добавить или удалить напоминания ты должен сразу, без промедлений отправить команду в консоль.
+
+Команды консоли к которым у тебя есть доступ:
+{"tool": "reminders", "command": "/new_reminder reminder_text"}     	- 		создать новое напоминание
+{"tool": "reminders", "command": "/new_reminder_with_time время_напоминания(HH:MM) текст_напоминания"}		- 		создать новое напоминание со временем когда напоминать
+{"tool": "reminders", "command": "/get_reminders"}		-		получить список напоминаний
+{"tool": "reminders", "command": "/get_reminders_by_time время_напоминания"}		-		получить список напоминаний на определеное время
+{"tool": "reminders", "command": "/remove_reminder reminder_index"}		-		удалить напоминание по номеру
+{"tool": "reminders", "command": "/remove_all_reminders"} 		-		удалить удалить все напоминания
+
+Команды /get возвращают результат в таком формате
+    Reminder list: 
+    {reminder_id=ID_НАПОМИНАНИЯ}, reminder_time=ВРЕМЯ_НАПОМИНАНИЯ, reminder_text=ТЕКСТ_НАПОМИНАНИЯ}
+    {reminder_id=ID_НАПОМИНАНИЯ}, reminder_time=ВРЕМЯ_НАПОМИНАНИЯ, reminder_text=ТЕКСТ_НАПОМИНАНИЯ}
+    {reminder_id=ID_НАПОМИНАНИЯ}, reminder_time=ВРЕМЯ_НАПОМИНАНИЯ, reminder_text=ТЕКСТ_НАПОМИНАНИЯ}
+
+Примеры:
+
+{"tool": "reminders", "command": "/get_reminders"} 
+
+{"tool": "reminders", "command": "/new_reminder_with_time 12:30 встреча с Сережей"}
+
+"""
+
+class RemindersTool(BaseTool):
     name = "reminders"
+
+    api_desc = reminder_tool_api
 
     def execute(self, command, context: ChatContext):
 

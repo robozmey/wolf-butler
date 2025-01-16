@@ -4,21 +4,23 @@ import psycopg2
 
 from session import Session
 from tools.reminder_tools_general import Reminder
+from butler import Butler
 
 class Storage():
 
     class Sessions():
 
-        def __init__(self, storage):
+        def __init__(self, storage, butler: Butler):
             self.storage = storage
             self.sessions = {}
+            self.butler = butler
 
         def list(self) -> List[int]:
             return list(self.sessions.keys())
 
         def get(self, chat_id: int) -> Session:
             if chat_id not in self.sessions:
-                self.sessions[chat_id] = Session(chat_id)
+                self.sessions[chat_id] = self.butler.new_session(chat_id)
 
             return self.sessions[chat_id]
 
@@ -26,7 +28,7 @@ class Storage():
             self.sessions[chat_id] = session
 
         def reset(self, chat_id: int) -> Session:
-            self.sessions[chat_id] = Session(chat_id)
+            self.sessions[chat_id] = self.butler.new_session(chat_id)
             return self.sessions[chat_id]
 
     class Reminders():
@@ -90,11 +92,12 @@ class Storage():
         cursor.close()
         return records
 
-    def __init__(self):
+    def __init__(self, butler: Butler):
         self.connection = psycopg2.connect(
             dbname='wolf_butler_database', user='admin', 
             password='WeRy_HaRt_paroll', host='89.169.164.126', port='6000'
         )
+        self.butler = butler
         self.reminders = self.Reminders(self)
-        self.sessions = self.Sessions(self)
+        self.sessions = self.Sessions(self, butler)
 

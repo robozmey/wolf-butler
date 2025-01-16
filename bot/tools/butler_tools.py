@@ -1,20 +1,17 @@
-import re
-
-from storage import Storage
-from session import Session
-from context import ChatContext
-
 class BaseTool():
+
+    api_desc = ""
+
     def process(obj):
         pass
 
-class SayTool():
+class SayTool(BaseTool):
     name = "say"
     def process(self, obj):
         print(obj["text"])
         return []
     
-class TelegramSayTool():
+class TelegramSayTool(BaseTool):
     name = "say"
     def process(self, obj, context):
         text = obj["text"]
@@ -23,7 +20,7 @@ class TelegramSayTool():
 
         return []
     
-class TelegramDebugTool():
+class TelegramDebugTool(BaseTool):
     name = "debug"
     def process(self, obj, context):
         context.bot.send_message(context.chat_id, f'<code>{str(obj)}</code>', parse_mode='HTML')

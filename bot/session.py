@@ -28,9 +28,7 @@ from __future__ import annotations
 
 ####
 
-from promts import DEFAULT_MESSAGES
-
 class Session():
-    def __init__(self, chat_id: int):
+    def __init__(self, chat_id: int, messages):
         self.chat_id = chat_id
-        self.messages = DEFAULT_MESSAGES
+        self.messages = messages

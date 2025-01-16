@@ -17,47 +17,14 @@ butler_promt = """
 
 """
 
-reminder_tool_api = """
-Reminders API 
-
-Tы управляешь напоминаниями через консоль, чтобы получить доступ к консоли пиши сообщения начиная с '/' по одной команде на новой строке. Команды к консоли занимают все твое сообщение.
-     
-После вызова команды нужно подождать. Команда будет обработана только когда будет получет ответ от console: "Reminder created!" или "Reminder removed!"
-     
-Напомнинание не счистается созданым если не была вызвана команда
-
-Напоминания удаляются только по запросу пользователя
-     
-Каждый раз когда пользователь просит посмотреть, добавить или удалить напоминания ты должен сразу, без промедлений отправить команду в консоль.
-
-Команды консоли к которым у тебя есть доступ:
-/new_reminder reminder_text		- 		создать новое напоминание
-/new_reminder_with_time время_напоминания(HH:MM) текст_напоминания		- 		создать новое напоминание со временем когда напоминать
-/get_reminders		-		получить список напоминаний
-/get_reminders_by_time время_напоминания		-		получить список напоминаний на определеное время
-/remove_reminder reminder_index		-		удалить напоминание по номеру
-/remove_all_reminders 		-		удалить удалить все напоминания
-
-Команды /get возвращают результат в таком формате
-    Reminder list: 
-    {reminder_id=ID_НАПОМИНАНИЯ}, reminder_time=ВРЕМЯ_НАПОМИНАНИЯ, reminder_text=ТЕКСТ_НАПОМИНАНИЯ}
-    {reminder_id=ID_НАПОМИНАНИЯ}, reminder_time=ВРЕМЯ_НАПОМИНАНИЯ, reminder_text=ТЕКСТ_НАПОМИНАНИЯ}
-    {reminder_id=ID_НАПОМИНАНИЯ}, reminder_time=ВРЕМЯ_НАПОМИНАНИЯ, reminder_text=ТЕКСТ_НАПОМИНАНИЯ}
-
-Примеры:
-
-{"tool": "reminders", "command": "/get_reminders"} 
-
-{"tool": "reminders", "command": "/new_reminder_with_time 12:30 встреча с Сережей"}
-
-"""
-
 butler_message_format = """
 Ты отвечаешь на сообщения в только в таком таком формате:
 
 {"tool": "say", "text": "Приветствую"} - когда что-то хочешь сказать пользователю
 
-{"tool": "reminders", "command": "/get_reminders"} - когда хочешь обратиться к консоли
+{"tool": "reminders", "command": "/get_reminders"} - когда хочешь обратиться к напоминаниям
+
+{"tool": "time", "command": "/get_time"} - когда хочешь узнать сколько времени
 
 Пользователь видит только сообщения отправленные как {"tool": "say", "text": "Приветствую"}
 
@@ -72,5 +39,4 @@ butler_entry_message = """
 {"tool": "say", "text": "Здравствуйте, господин! Чем могу быть полезен?"}
 """
 
-butler_desc = butler_promt + butler_message_format + reminder_tool_api
-DEFAULT_MESSAGES = [{"role": "system", "text": butler_desc}, {"role": "system", "text": "Поприветствуй пользователя"}]
+butler_desc = butler_promt + butler_message_format
