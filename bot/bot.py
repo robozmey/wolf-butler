@@ -74,7 +74,7 @@ import datetime
 
 class Scheduler():
     def __init__(self):
-        self.previous_remind_time = datetime.datetime.now().time().isoformat(timespec='minutes')
+        self.previous_remind_time = (datetime.datetime.now() - datetime.timedelta(minutes=1)).time().isoformat(timespec='minutes')
 
     def remind(self):
         prev_time = self.previous_remind_time
