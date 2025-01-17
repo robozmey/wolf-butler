@@ -144,7 +144,7 @@ def send_history(message):
     if len(out) > 1000:
         out = out[-1000:]
 
-    bot.send_message(chat_id, out)
+    bot.send_message(chat_id, out + f"\n Messages: {len(session.messages)}")
 
 
 # Handle all other messages with content_type 'text' (content_types defaults to ['text'])

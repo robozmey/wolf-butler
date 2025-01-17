@@ -58,8 +58,16 @@ class Butler():
         self.text_model = sdk.models.completions("yandexgpt").configure(temperature=0.5)
 
 
+    def get_messages_header(self):
+        messages = [
+            {"role": "system", "text": self.butler_desc}, 
+            {"role": "system", "text": "Поприветствуй пользователя, представьсься и расскажи о том, что ты можешь"}
+        ]
+        return messages
+
+
     def new_session(self, chat_id: int) -> Session:
-        messages = [{"role": "system", "text": self.butler_desc}, {"role": "system", "text": "Поприветствуй пользователя, представьсься и расскажи о том, что ты можешь"}]
+        messages = []
         return Session(chat_id, messages)
 
 
@@ -85,7 +93,11 @@ class Butler():
 
     
     def text_invoke(self, messages):
-        respond = self.text_model.run(messages).alternatives[0].text
+
+        if len(messages) > 40:
+            messages = messages[-20:]
+
+        respond = self.text_model.run(self.get_messages_header() + messages).alternatives[0].text
 
         m = re.match(r'\{[\s\S]+?\}', respond)
         if m:

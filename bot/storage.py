@@ -89,7 +89,7 @@ class Storage():
 
             for r in records:
                 reminder_id = r[0]
-                reminder_time = r[1].isoformat(timespec='minutes')
+                reminder_time = r[1].isoformat(timespec='minutes') if r[1] is not None else None
                 reminder_text = r[2]
 
                 reminds += [Reminder(reminder_text, reminder_time, reminder_id)]
