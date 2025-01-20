@@ -128,6 +128,9 @@ class Butler():
         for tool in self.tools:
             if obj["tool"] == tool.name or tool.name == "debug":
                 result += tool.process(obj, context)
+
+        if result == []:
+            logging.warning(f'Command didn\'t processed: {obj}')
             
         return result
 

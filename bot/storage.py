@@ -121,12 +121,12 @@ class Storage():
             all_reminders = self.get(chat_id)
             if time_start <= time_end:
                 return list(filter(
-                    lambda r: time_start < r.time and r.time <= time_end, 
+                    lambda r: r.time and time_start < r.time and r.time <= time_end, 
                     all_reminders
                 ))
             else:
                 return list(filter(
-                    lambda r: time_start < r.time or r.time <= time_end, 
+                    lambda r: r.time and time_start < r.time or r.time <= time_end, 
                     all_reminders
                 ))
             
