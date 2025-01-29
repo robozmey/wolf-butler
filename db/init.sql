@@ -15,3 +15,20 @@ CREATE TABLE reminders (
     reminder_time TIME,
     reminder_text TEXT
 );
+
+CREATE TABLE user_info (
+    user_info_id SERIAL PRIMARY KEY,
+    chat_id SERIAL UNIQUE,
+    user_name text,
+    user_callname text,
+    user_utc text,
+)
+
+CREATE TABLE memory (
+    item_id SERIAL PRIMARY KEY,
+    chat_id SERIAL UNIQUE,
+    bucket_name text,
+    key_name text,
+    headers_list XML,
+    content text,
+);

@@ -23,6 +23,39 @@ class StorageSettings():
 
 class Storage():
 
+    class Memory():
+
+        def __init__(self, storage):
+            self.storage = storage
+
+        def check_request(self):
+            pass
+
+        def get(self, chat_id, address):
+            bucket, key = address.split('/')
+            records = self.storage.db_execute(
+                "SELECT headers, content FROM memory WHERE chat_id = %s and bucket_name = %s and key_name = %s", 
+                [chat_id, bucket, key]
+            )
+            pass
+
+        def put(self, chat_id, address, headers, body):
+            pass
+
+        def delete(self, chat_id, address):
+            pass
+
+        def send(self, chat_id, request):
+            if request['method'] == 'PUT':
+                return self.put(request['address'], request['headers'], request['body'])
+            elif request['method'] == 'GET':
+                return self.get(request['address'])
+            elif request['method'] == 'HEAD':
+                return self.get(request['address'])
+            elif request['method'] == 'DELETE':
+                return self.delete(request['address'])
+
+
     class Sessions():
 
         def __init__(self, storage, butler: Butler):
